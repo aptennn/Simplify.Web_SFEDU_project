@@ -1,5 +1,9 @@
 # Simplify.Web
 
+> Это задание для университетского проекта (по компьютерным сетям) по разработке системы фильтров для Simplify.Web находятся в файле [`src/TASK.MD`](src/TASK.MD).
+> Note: This repository is used as part of a university project assignment.
+> Current task specification: [`src/TASK.MD`](src/TASK.MD).
+
 ![Simplify](https://raw.githubusercontent.com/SimplifyNet/Images/master/LogoWeb128x128.png)
 
 [![Nuget Version](https://img.shields.io/nuget/v/Simplify.Web)](https://www.nuget.org/packages/Simplify.Web/)
