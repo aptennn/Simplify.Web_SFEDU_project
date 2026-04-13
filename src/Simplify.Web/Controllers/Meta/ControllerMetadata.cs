@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using Simplify.Web.Attributes;
+using Simplify.Web.Controllers.Filters;
 using Simplify.Web.Controllers.Meta.Routing;
 using Simplify.Web.Http;
 
@@ -48,6 +50,11 @@ public abstract class ControllerMetadata(Type controllerType) : IControllerMetad
 	/// The security.
 	/// </value>
 	public ControllerSecurity? Security { get; } = BuildControllerSecurity(controllerType);
+
+	/// <summary>
+	/// Gets the controller action filters.
+	/// </summary>
+	public IReadOnlyList<ActionFilterRegistration> ActionFilters { get; } = BuildControllerActionFilters(controllerType);
 
 	/// <summary>
 	/// Builds the controller route.
@@ -112,6 +119,15 @@ public abstract class ControllerMetadata(Type controllerType) : IControllerMetad
 			? new ControllerSecurity(true, requiredUserRoles)
 			: null;
 	}
+
+	private static IReadOnlyList<ActionFilterRegistration> BuildControllerActionFilters(ICustomAttributeProvider controllerType) =>
+		controllerType
+			.GetCustomAttributes(typeof(ApplyFilterAttribute), false)
+			.Cast<ApplyFilterAttribute>()
+			.OrderBy(x => x.Order)
+			.Select(x => new ActionFilterRegistration(x.FilterType, x.Order))
+			.ToList()
+			.AsReadOnly();
 
 	private IDictionary<HttpMethod, IControllerRoute> BuildControllerRouteInfo(ICustomAttributeProvider controllerType)
 	{

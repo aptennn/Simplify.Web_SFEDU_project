@@ -37,6 +37,23 @@ public class Controller1MetadataFactoryTests
 		AssertExecParameters(metaData);
 	}
 
+	[Test]
+	public void Create_ControllerWithActionFilters_ActionFiltersLoadedAndOrdered()
+	{
+		// Arrange
+		var factory = new Controller1MetadataFactory();
+
+		// Act
+		var metaData = factory.Create(typeof(FilteredController));
+
+		// Assert
+		Assert.That(metaData.ActionFilters.Count, Is.EqualTo(2));
+		Assert.That(metaData.ActionFilters[0].FilterType, Is.EqualTo(typeof(FirstFilter)));
+		Assert.That(metaData.ActionFilters[0].Order, Is.EqualTo(1));
+		Assert.That(metaData.ActionFilters[1].FilterType, Is.EqualTo(typeof(SecondFilter)));
+		Assert.That(metaData.ActionFilters[1].Order, Is.EqualTo(2));
+	}
+
 	private static void AssertExecParameters(IControllerMetadata metaData)
 	{
 		Assert.That(metaData.ExecParameters, Is.Not.Null);

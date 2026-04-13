@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Simplify.DI;
 using Simplify.Web.Controllers.Execution;
 using Simplify.Web.Controllers.Execution.Resolver;
+using Simplify.Web.Controllers.Filters;
 using Simplify.Web.Controllers.Response;
 
 namespace Simplify.Web.Bootstrapper.SimplifyWebRegistrationsOverride;
@@ -12,6 +13,18 @@ namespace Simplify.Web.Bootstrapper.SimplifyWebRegistrationsOverride;
 /// </summary>
 public partial class RegistrationsOverride
 {
+	/// <summary>
+	/// Overrides the `IReadOnlyList&lt;ActionFilterRegistration&gt;` registration.
+	/// </summary>
+	/// <param name="action">The custom registration action.</param>
+	public RegistrationsOverride OverrideGlobalActionFilters(Action<IDIRegistrator> action) => AddAction<IReadOnlyList<ActionFilterRegistration>>(action);
+
+	/// <summary>
+	/// Overrides the `IControllerActionFiltersExecutor` registration.
+	/// </summary>
+	/// <param name="action">The custom registration action.</param>
+	public RegistrationsOverride OverrideControllerActionFiltersExecutor(Action<IDIRegistrator> action) => AddAction<IControllerActionFiltersExecutor>(action);
+
 	/// <summary>
 	/// Overrides the `IControllerExecutorResolver` registration.
 	/// </summary>

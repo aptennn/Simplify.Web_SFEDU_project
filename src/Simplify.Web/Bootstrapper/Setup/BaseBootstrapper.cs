@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Configuration;
 using Simplify.DI;
+using Simplify.Web.Controllers.Filters;
 using Simplify.Web.Bootstrapper.Configuration;
 using Simplify.Web.Controllers.Meta.MetaStore;
 using Simplify.Web.Settings;
@@ -36,6 +37,8 @@ public partial class BaseBootstrapper
 	/// </summary>
 	protected IEnumerable<Type> TypesToExclude { get; private set; } = [];
 
+	private readonly IList<ActionFilterRegistration> _globalActionFilters = [];
+
 	private ISimplifyWebSettings Settings { get; set; } = null!;
 
 	/// <summary>
@@ -55,11 +58,16 @@ public partial class BaseBootstrapper
 		}
 
 		Settings = new SimplifyWebSettings(Configuration);
+		_globalActionFilters.Clear();
+
+		RegisterActionFilters();
 
 		// Registering Simplify.Web types
 
 		RegisterController1Factory();
 		RegisterController2Factory();
+		RegisterGlobalActionFilters();
+		RegisterControllerActionFiltersExecutor();
 		RegisterControllerExecutorResolver();
 		RegisterControllerExecutorResolverExecutors();
 		RegisterControllersExecutor();

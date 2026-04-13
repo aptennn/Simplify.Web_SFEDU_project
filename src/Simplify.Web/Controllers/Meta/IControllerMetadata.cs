@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using Simplify.Web.Controllers.Filters;
 
 namespace Simplify.Web.Controllers.Meta;
 
@@ -38,4 +40,9 @@ public interface IControllerMetadata
 	/// The security.
 	/// </value>
 	ControllerSecurity? Security { get; }
+
+	/// <summary>
+	/// Gets the controller action filters.
+	/// </summary>
+	IReadOnlyList<ActionFilterRegistration> ActionFilters { get; }
 }

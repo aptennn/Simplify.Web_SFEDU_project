@@ -60,6 +60,23 @@ public class Controller2MetadataFactoryTests
 		// ReSharper restore StringLiteralTypo
 	}
 
+	[Test]
+	public void Create_ControllerWithActionFilters_ActionFiltersLoadedAndOrdered()
+	{
+		// Arrange
+		var factory = new Controller2MetadataFactory();
+
+		// Act
+		var metaData = factory.Create(typeof(FilteredControllerV2));
+
+		// Assert
+		Assert.That(metaData.ActionFilters.Count, Is.EqualTo(2));
+		Assert.That(metaData.ActionFilters[0].FilterType, Is.EqualTo(typeof(V2FirstFilter)));
+		Assert.That(metaData.ActionFilters[0].Order, Is.EqualTo(1));
+		Assert.That(metaData.ActionFilters[1].FilterType, Is.EqualTo(typeof(V2SecondFilter)));
+		Assert.That(metaData.ActionFilters[1].Order, Is.EqualTo(2));
+	}
+
 	private static void AssertExecParameters(IControllerMetadata metaData)
 	{
 		Assert.That(metaData.ExecParameters, Is.Not.Null);

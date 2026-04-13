@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using Simplify.Web.Controllers.Execution;
+using Simplify.Web.Controllers.Filters;
 using Simplify.Web.Controllers.Meta;
 using Simplify.Web.Controllers.V2.Metadata;
 
@@ -13,7 +14,8 @@ namespace Simplify.Web.Controllers.V2.Execution;
 /// </summary>
 /// <seealso cref="IControllerExecutor" />
 /// <param name="controllerFactory">The v2 controller factory.</param>
-public class Controller2Executor(IController2Factory controllerFactory) : IControllerExecutor
+/// <param name="actionFiltersExecutor">The controller action filters executor.</param>
+public class Controller2Executor(IController2Factory controllerFactory, IControllerActionFiltersExecutor actionFiltersExecutor) : IControllerExecutor
 {
 	/// <summary>
 	/// Determines whether this executor can execute the controller.
@@ -25,7 +27,10 @@ public class Controller2Executor(IController2Factory controllerFactory) : IContr
 	/// Creates an actual controller and executes it.
 	/// </summary>
 	/// <param name="matchedController">The matched controller.</param>
-	public Task<ControllerResponse?> ExecuteAsync(IMatchedController matchedController)
+	public Task<ControllerResponse?> ExecuteAsync(IMatchedController matchedController) =>
+		actionFiltersExecutor.ExecuteAsync(matchedController, () => ExecuteControllerAsync(matchedController));
+
+	private Task<ControllerResponse?> ExecuteControllerAsync(IMatchedController matchedController)
 	{
 		var controllerMetadata = (IController2Metadata)matchedController.Controller;
 		var controller = controllerFactory.CreateController(matchedController);

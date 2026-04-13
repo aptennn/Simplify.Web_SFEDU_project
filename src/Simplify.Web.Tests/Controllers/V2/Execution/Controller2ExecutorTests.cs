@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Moq;
 using NUnit.Framework;
 using Simplify.Web.Controllers;
+using Simplify.Web.Controllers.Filters;
 using Simplify.Web.Controllers.V1.Metadata;
 using Simplify.Web.Controllers.V2.Execution;
 using Simplify.Web.Controllers.V2.Metadata;
@@ -17,13 +19,19 @@ public class Controller2ExecutorTests
 	private Controller2Executor _executor = null!;
 
 	private Mock<IController2Factory> _controllerFactory = null!;
+	private Mock<IControllerActionFiltersExecutor> _actionFiltersExecutor = null!;
 
 	[SetUp]
 	public void Initialize()
 	{
 		_controllerFactory = new Mock<IController2Factory>();
+		_actionFiltersExecutor = new Mock<IControllerActionFiltersExecutor>();
 
-		_executor = new Controller2Executor(_controllerFactory.Object);
+		_actionFiltersExecutor
+			.Setup(x => x.ExecuteAsync(It.IsAny<IMatchedController>(), It.IsAny<Func<Task<ControllerResponse?>>>()))
+			.Returns<IMatchedController, Func<Task<ControllerResponse?>>>(async (_, next) => await next());
+
+		_executor = new Controller2Executor(_controllerFactory.Object, _actionFiltersExecutor.Object);
 	}
 
 	[Test]
@@ -67,6 +75,7 @@ public class Controller2ExecutorTests
 		Assert.That(controller.Invoked, Is.True);
 
 		_controllerFactory.Verify(x => x.CreateController(It.Is<IMatchedController>(c => c == mc)));
+		_actionFiltersExecutor.Verify(x => x.ExecuteAsync(It.Is<IMatchedController>(c => c == mc), It.IsAny<Func<Task<ControllerResponse?>>>()), Times.Once);
 	}
 
 	[Test]
@@ -90,6 +99,7 @@ public class Controller2ExecutorTests
 		Assert.That(controller.Invoked, Is.True);
 
 		_controllerFactory.Verify(x => x.CreateController(It.Is<IMatchedController>(c => c == mc)));
+		_actionFiltersExecutor.Verify(x => x.ExecuteAsync(It.Is<IMatchedController>(c => c == mc), It.IsAny<Func<Task<ControllerResponse?>>>()), Times.Once);
 	}
 
 	[Test]
@@ -113,6 +123,7 @@ public class Controller2ExecutorTests
 		Assert.That(controller.Invoked, Is.True);
 
 		_controllerFactory.Verify(x => x.CreateController(It.Is<IMatchedController>(c => c == mc)));
+		_actionFiltersExecutor.Verify(x => x.ExecuteAsync(It.Is<IMatchedController>(c => c == mc), It.IsAny<Func<Task<ControllerResponse?>>>()), Times.Once);
 	}
 
 	[Test]
@@ -138,6 +149,7 @@ public class Controller2ExecutorTests
 		Assert.That(((Content)result!).StringContent, Is.EqualTo("Foo"));
 
 		_controllerFactory.Verify(x => x.CreateController(It.Is<IMatchedController>(c => c == mc)));
+		_actionFiltersExecutor.Verify(x => x.ExecuteAsync(It.Is<IMatchedController>(c => c == mc), It.IsAny<Func<Task<ControllerResponse?>>>()), Times.Once);
 	}
 
 	[Test]
@@ -163,6 +175,7 @@ public class Controller2ExecutorTests
 		Assert.That(((Content)result!).StringContent, Is.EqualTo("Foo"));
 
 		_controllerFactory.Verify(x => x.CreateController(It.Is<IMatchedController>(c => c == mc)));
+		_actionFiltersExecutor.Verify(x => x.ExecuteAsync(It.Is<IMatchedController>(c => c == mc), It.IsAny<Func<Task<ControllerResponse?>>>()), Times.Once);
 	}
 
 	[Test]
@@ -186,6 +199,7 @@ public class Controller2ExecutorTests
 		Assert.That(controller.Invoked, Is.True);
 
 		_controllerFactory.Verify(x => x.CreateController(It.Is<IMatchedController>(c => c == mc)));
+		_actionFiltersExecutor.Verify(x => x.ExecuteAsync(It.Is<IMatchedController>(c => c == mc), It.IsAny<Func<Task<ControllerResponse?>>>()), Times.Once);
 	}
 
 	[Test]
@@ -244,5 +258,28 @@ public class Controller2ExecutorTests
 		Assert.That(controller.DecimalArrayParam[1], Is.EqualTo(7.1m));
 
 		_controllerFactory.Verify(x => x.CreateController(It.Is<IMatchedController>(c => c == mc)));
+		_actionFiltersExecutor.Verify(x => x.ExecuteAsync(It.Is<IMatchedController>(c => c == mc), It.IsAny<Func<Task<ControllerResponse?>>>()), Times.Once);
+	}
+
+	[Test]
+	public async Task ExecuteAsync_FiltersStopped_ControllerNotInvokedAndFilterResponseReturned()
+	{
+		// Arrange
+		var response = Mock.Of<ControllerResponse>();
+		var md = new Controller2Metadata(typeof(VoidController));
+		var mc = new MatchedController(md);
+
+		_actionFiltersExecutor
+			.Setup(x => x.ExecuteAsync(
+				It.Is<IMatchedController>(c => c == mc),
+				It.IsAny<Func<Task<ControllerResponse?>>>()))
+			.ReturnsAsync(response);
+
+		// Act
+		var result = await _executor.ExecuteAsync(mc);
+
+		// Assert
+		Assert.That(result, Is.EqualTo(response));
+		_controllerFactory.Verify(x => x.CreateController(It.IsAny<IMatchedController>()), Times.Never);
 	}
 }

@@ -3,6 +3,7 @@ using System.Linq;
 using Simplify.DI;
 using Simplify.Web.Controllers.Execution;
 using Simplify.Web.Controllers.Execution.Resolver;
+using Simplify.Web.Controllers.Filters;
 using Simplify.Web.Controllers.Response;
 using Simplify.Web.Controllers.V1.Execution;
 using Simplify.Web.Controllers.V2.Execution;
@@ -15,6 +16,33 @@ namespace Simplify.Web.Bootstrapper.Setup;
 /// </summary>
 public partial class BaseBootstrapper
 {
+	/// <summary>
+	/// Registers the global action filters.
+	/// </summary>
+	public virtual void RegisterGlobalActionFilters()
+	{
+		if (TypesToExclude.Contains(typeof(IReadOnlyList<ActionFilterRegistration>)))
+			return;
+
+		BootstrapperFactory.ContainerProvider.Register<IReadOnlyList<ActionFilterRegistration>>(_ =>
+			_globalActionFilters
+				.OrderBy(x => x.Order)
+				.ToList()
+				.AsReadOnly(),
+			LifetimeType.Singleton);
+	}
+
+	/// <summary>
+	/// Registers the controller action filters executor.
+	/// </summary>
+	public virtual void RegisterControllerActionFiltersExecutor()
+	{
+		if (TypesToExclude.Contains(typeof(IControllerActionFiltersExecutor)))
+			return;
+
+		BootstrapperFactory.ContainerProvider.Register<IControllerActionFiltersExecutor, ControllerActionFiltersExecutor>();
+	}
+
 	/// <summary>
 	/// Registers the controller executor resolver.
 	/// </summary>
@@ -36,8 +64,8 @@ public partial class BaseBootstrapper
 
 		BootstrapperFactory.ContainerProvider.Register<IReadOnlyList<IControllerExecutor>>(r =>
 			[
-				new Controller2Executor(r.Resolve<IController2Factory>()),
-				new Controller1Executor(r.Resolve<IController1Factory>())
+				new Controller2Executor(r.Resolve<IController2Factory>(), r.Resolve<IControllerActionFiltersExecutor>()),
+				new Controller1Executor(r.Resolve<IController1Factory>(), r.Resolve<IControllerActionFiltersExecutor>())
 			]);
 	}
 
