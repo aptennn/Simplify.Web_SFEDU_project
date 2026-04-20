@@ -93,3 +93,4 @@ RegisterGlobalFilter<CacheFilter>(new CacheFilterOptions { Duration = TimeSpan.F
     Глобальные фильтры применяются ко всем контроллерам
     Фильтры, примененные через атрибуты, работают с учетом указанного порядка
     Примеры фильтров (LoggingFilter и CacheFilter) работают корректно
+DOTNET_ROOT=/usr/lib/dotnet DOTNET_MULTILEVEL_LOOKUP=1 /usr/bin/dotnet test /home/egorka/RiderProjects/Simplify.Web_SFEDU_project/src/Simplify.Web.sln -f net9.0
